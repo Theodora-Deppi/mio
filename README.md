@@ -5,6 +5,12 @@ mio has been created with the goal to be easily includable (i.e. no dependencies
 
 Please feel free to open an issue, I'll try to address any concerns as best I can.
 
+## Theodora-Deppi's changes:
+ - Added std::filesystem::path support. (c++17 required)
+ - Added inline to s_2_ws.
+ - Renamed mmap.hpp to mio.hpp, so it's interchangeable with the single header file.
+ - Added std::byte support. (C++20 required)
+
 ### Why?
 Because memory mapping is the best thing since sliced bread!
 
