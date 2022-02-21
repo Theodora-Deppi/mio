@@ -21,10 +21,11 @@
 #ifndef MIO_BASIC_MMAP_IMPL
 #define MIO_BASIC_MMAP_IMPL
 
-#include "mio/mmap.hpp"
+#include "mio/mio.hpp"
 #include "mio/page.hpp"
 #include "mio/detail/string_util.hpp"
 
+#include <vector>
 #include <algorithm>
 
 #ifndef _WIN32
@@ -52,7 +53,8 @@ inline DWORD int64_low(int64_t n) noexcept
     return n & 0xffffffff;
 }
 
-std::wstring s_2_ws(const std::string& s)
+// + pull 71 Added inline
+inline std::wstring s_2_ws(const std::string& s)
 {
     if (s.empty())
         return{};
@@ -293,6 +295,32 @@ basic_mmap<AccessMode, ByteT>::mapping_handle() const noexcept
     return file_handle_;
 #endif
 }
+
+
+#ifdef FS_SUPPORT
+template<access_mode AccessMode, typename ByteT>
+void basic_mmap<AccessMode, ByteT>::map(const std::filesystem::path& path, const size_type offset,
+                                        const size_type length, std::error_code& error) {
+    error.clear();
+    if(path.empty())
+    {
+        error = std::make_error_code(std::errc::invalid_argument);
+        return;
+    }
+    const auto handle = detail::open_file(path.string(), AccessMode, error);
+    if(error)
+    {
+        return;
+    }
+
+    map(handle, offset, length, error);
+    // This MUST be after the call to map, as that sets this to true.
+    if(!error)
+    {
+        is_handle_internal_ = true;
+    }
+}
+#endif
 
 template<access_mode AccessMode, typename ByteT>
 template<typename String>

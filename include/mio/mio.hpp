@@ -18,9 +18,18 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/*
+ * Theodora-Deppi's changes:
+ * Added std::filesystem::path support. (c++17 required)
+ * Added inline to s_2_ws.
+ * Renamed mmap.hpp to mio.hpp, so it's interchangeable with the single header file.
+ * Added std::byte support. (C++20 required)
+ */
+
 #ifndef MIO_MMAP_HEADER
 #define MIO_MMAP_HEADER
 
+#include <filesystem>
 #include "mio/page.hpp"
 
 #include <iterator>
@@ -36,6 +45,23 @@
 #else // ifdef _WIN32
 # define INVALID_HANDLE_VALUE -1
 #endif // ifdef _WIN32
+
+
+#ifndef __cplusplus
+#error A C++ compiler is required!
+#elif __cplusplus == 201703L
+#define FS_SUPPORT
+#include <filesystem> // Adds
+#elif __cplusplus == 202002L
+#define FS_SUPPORT
+#include <filesystem> // Adds
+#include <cstddef>
+
+#define CXX20_SUPPORT
+#include <span>
+#elif __cplusplus == 199711L
+#error __cplusplus is returning a not specified version. If you are using msvc make sure "/Zc:__cplusplus" is defined
+#endif
 
 namespace mio {
 
@@ -253,6 +279,32 @@ public:
     reference operator[](const size_type i) noexcept { return data_[i]; }
     const_reference operator[](const size_type i) const noexcept { return data_[i]; }
 
+
+#ifdef FS_SUPPORT
+    /**
+     * Establishes a memory mapping with AccessMode. If the mapping is unsuccesful, the
+     * reason is reported via `error` and the object remains in a state as if this
+     * function hadn't been called.
+     *
+     * `path`, which must be a path to an existing file, is used to retrieve a file
+     * handle (which is closed when the object destructs or `unmap` is called), which is
+     * then used to memory map the requested region. Upon failure, `error` is set to
+     * indicate the reason and the object remains in an unmapped state.
+     *
+     * `offset` is the number of bytes, relative to the start of the file, where the
+     * mapping should begin. When specifying it, there is no need to worry about
+     * providing a value that is aligned with the operating system's page allocation
+     * granularity. This is adjusted by the implementation such that the first requested
+     * byte (as returned by `data` or `begin`), so long as `offset` is valid, will be at
+     * `offset` from the start of the file.
+     *
+     * `length` is the number of bytes to map. It may be `map_entire_file`, in which
+     * case a mapping of the entire file is created.
+     */
+    void map(const std::filesystem::path& path, const size_type offset,
+             const size_type length, std::error_code& error);
+#endif
+
     /**
      * Establishes a memory mapping with AccessMode. If the mapping is unsuccesful, the
      * reason is reported via `error` and the object remains in a state as if this
@@ -429,6 +481,11 @@ using ummap_source = basic_mmap_source<unsigned char>;
 
 using mmap_sink = basic_mmap_sink<char>;
 using ummap_sink = basic_mmap_sink<unsigned char>;
+
+#ifdef CXX20_SUPPORT
+    using bmmap_source = basic_mmap_source<std::byte>;
+    using bmap_sink = basic_mmap_sink<std::byte>;
+#endif
 
 /**
  * Convenience factory method that constructs a mapping for any `basic_mmap` or

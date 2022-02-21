@@ -39,7 +39,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # 1. It DOES NOT propegate to parent scopes (such as parent projects)
 # 2. It hides cache variables of the same name for this directory and below
 #
-set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD 11) # Minimum
+set(CMAKE_CXX_STANDARD 17) # For the filesystem support
+#set(CMAKE_CXX_STANDARD 20) # For std::byte support
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #
@@ -95,6 +97,9 @@ mark_as_advanced(mio.installation)
 #
 add_library(mio INTERFACE)
 add_library(mio::mio ALIAS mio)
+if ((MSVC) AND (MSVC_VERSION GREATER_EQUAL 1914))
+  target_compile_options(mio INTERFACE "/Zc:__cplusplus")
+endif()
 
 #
 # The include directory for mio can be expected to vary between build
@@ -120,11 +125,18 @@ if(WIN32)
   add_library(mio_full_winapi INTERFACE)
   add_library(mio::mio_full_winapi ALIAS mio_full_winapi)
   target_include_directories(mio_full_winapi INTERFACE ${prefix})
+  if ((MSVC) AND (MSVC_VERSION GREATER_EQUAL 1914))
+    target_compile_options(mio_full_winapi INTERFACE "/Zc:__cplusplus")
+  endif()
 
   add_library(mio_min_winapi INTERFACE)
   add_library(mio::mio_min_winapi ALIAS mio_full_winapi)
   target_compile_definitions(mio INTERFACE WIN32_LEAN_AND_MEAN NOMINMAX)
   target_include_directories(mio_min_winapi INTERFACE ${prefix})
+  if ((MSVC) AND (MSVC_VERSION GREATER_EQUAL 1914))
+    target_compile_options(mio_min_winapi INTERFACE "/Zc:__cplusplus")
+  endif()
+
 endif()
 
 #

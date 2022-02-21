@@ -2,7 +2,7 @@
 	"project": "Cross-platform C++11 header-only library for memory mapped file IO",
 	"target": "../single_include/mio/mio.hpp",
 	"sources": [
-		"../include/mio/mmap.hpp",
+		"../include/mio/mio.hpp",
 		"../include/mio/page.hpp",
 		"../include/mio/shared_mmap.hpp"
 	],

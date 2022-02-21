@@ -21,7 +21,7 @@
 #ifndef MIO_SHARED_MMAP_HEADER
 #define MIO_SHARED_MMAP_HEADER
 
-#include "mio/mmap.hpp"
+#include "mio/mio.hpp"
 
 #include <system_error> // std::error_code
 #include <memory> // std::shared_ptr
@@ -400,6 +400,11 @@ using shared_ummap_source = basic_shared_mmap_source<unsigned char>;
 
 using shared_mmap_sink = basic_shared_mmap_sink<char>;
 using shared_ummap_sink = basic_shared_mmap_sink<unsigned char>;
+
+#ifdef CXX20_SUPPORT
+    using shared_bmmap_source = basic_shared_mmap_source<std::byte>;
+    using shared_bmmap_sink = basic_shared_mmap_sink<std::byte>;
+#endif
 
 } // namespace mio
 
